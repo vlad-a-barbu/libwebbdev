@@ -7,7 +7,7 @@
 
 #define PORT 3000
 #define MAX_QUEUE_LEN 10
-#define BUFFER_SIZE 104857600
+#define BUFFER_SIZE 1000000
 
 int main() {
 
@@ -48,17 +48,20 @@ int main() {
         if ((cfd = accept(sfd, 
             (struct sockaddr *) &caddr,
             &(socklen_t){sizeof(caddr)})) == -1) { 
-            perror("accept");
-            continue;
+            perror("accept"); // when could this happen ?
+            continue; // skip or exit ?
         }
         
-        char *buff = (char *)malloc(BUFFER_SIZE * sizeof(char));
+        char buff[BUFFER_SIZE];
         ssize_t recsz = recv(cfd, buff, BUFFER_SIZE, 0);
-        if (recsz > 0) {
+        if (recsz == -1) {
+            perror("recv");
+        } else if (recsz == 0) {
+            printf("client disconnected\n");
+        } else {
             printf("%zd bytes received: <<<%s>>>\n", recsz, buff);
         }
 
-        free(buff);
         if (close(cfd) == -1) {
             perror("close cfd");
         }
